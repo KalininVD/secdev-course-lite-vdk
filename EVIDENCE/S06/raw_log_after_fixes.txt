@@ -1,0 +1,4 @@
+> make test
+pytest -q
+......                                                                                                                                             [100%]
+6 passed in 0.32s

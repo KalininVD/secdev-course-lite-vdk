@@ -1,0 +1,62 @@
+> make test
+pytest -q
+FFF                                                                                                                                                [100%]
+======================================================================= FAILURES ========================================================================
+_______________________________________________________ test_login_should_not_allow_sql_injection _______________________________________________________
+
+    def test_login_should_not_allow_sql_injection():
+        # Ожидаем, что вход с username, содержащим SQL-комментарий, должен БЫТЬ запрещён.
+        # В текущем состоянии приложения тест упадёт (и это нормально до S06).
+        payload = {"username": "admin'-- ", "password": "x"}
+        resp = client.post("/login", json=payload)
+>       assert resp.status_code == 401, "SQLi-бэйпас логина должен быть закрыт"
+E       AssertionError: SQLi-бэйпас логина должен быть закрыт
+E       assert 200 == 401
+E        +  where 200 = <Response [200 OK]>.status_code
+
+tests\test_login_sql_injection.py:12: AssertionError
+____________________________________________________ test_search_should_not_return_all_on_injection _____________________________________________________ 
+
+    def test_search_should_not_return_all_on_injection():
+        # По бессмысленному запросу ожидаем 0, а по инъекции — тоже 0 (не все элементы)
+        resp_noise = client.get("/search", params={"q": "zzzzzzzzz"}).json()
+        inj = client.get("/search", params={"q": "' OR '1'='1"}).json()
+>       assert len(inj["items"]) <= len(resp_noise["items"]), "Инъекция в LIKE не должна приводить к выдаче всех элементов"
+E       AssertionError: Инъекция в LIKE не должна приводить к выдаче всех элементов
+E       assert 3 <= 0
+E        +  where 3 = len([{'description': 'red and juicy', 'id': 1, 'name': 'apple'}, {'description': 'yellow fruit', 'id': 2, 'name': 'banana'}, {'description': 'orange and crunchy', 'id': 3, 'name': 'carrot'}])
+E        +  and   0 = len([])
+
+tests\test_search_sql_like.py:11: AssertionError
+__________________________________________________________ test_echo_should_escape_script_tags __________________________________________________________ 
+
+    def test_echo_should_escape_script_tags():
+        resp = client.get("/echo", params={"msg": "<script>alert(1)</script>"})
+        # В защищённом варианте скрипт не должен оказаться в ответе как тег.
+>       assert "<script>" not in resp.text, "Вывод должен экранировать потенциальную XSS-последовательность"
+E       AssertionError: Вывод должен экранировать потенциальную XSS-последовательность
+E       assert '<script>' not in '\n\n<!docty...dy>\n</html>'
+E
+E         '<script>' is contained here:
+E           "message"><script>alert(1)</script></div>  
+E         ?          ++++++++
+E             <p>Попробуйте: <code>/echo?msg=&lt;script&gt;alert(1)&lt;/script&gt;</code></p>
+E
+E             </main>
+E           </body>
+E           </html>
+
+tests\test_xss_escaping.py:10: AssertionError
+=================================================================== warnings summary ==================================================================== 
+tests/test_xss_escaping.py::test_echo_should_escape_script_tags
+  C:\Users\VLAD\Desktop\ДЗ\3 курс\Без_разр_ПО\secdev-course-lite-vdk-dv\.venv\Lib\site-packages\starlette\templating.py:161: DeprecationWarning: The `name` is not the first parameter anymore. The first parameter should be the `Request` instance.
+  Replace `TemplateResponse(name, {"request": request})` by `TemplateResponse(request, name)`.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================================================================ short test summary info ================================================================ 
+FAILED tests/test_login_sql_injection.py::test_login_should_not_allow_sql_injection - AssertionError: SQLi-бэйпас логина должен быть закрыт
+FAILED tests/test_search_sql_like.py::test_search_should_not_return_all_on_injection - AssertionError: Инъекция в LIKE не должна приводить к выдаче всех элементов
+FAILED tests/test_xss_escaping.py::test_echo_should_escape_script_tags - AssertionError: Вывод должен экранировать потенциальную XSS-последовательность   
+3 failed, 1 warning in 0.37s
+make: *** [Makefile:18: test] Error 1
