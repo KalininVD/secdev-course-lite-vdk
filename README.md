@@ -9,8 +9,8 @@
 
 ## Что я сдаю (три артефакта)
 
-- **TM - Требования + Модель угроз + ADR:** `GRADING/TM.md`
-- **DV - Мини-проект «DevOps-конвейер»:** `GRADING/DV.md`
+- **TM - Требования + Модель угроз + ADR:** [`GRADING/TM.md`](./GRADING/TM.md)
+- **DV - Мини-проект «DevOps-конвейер»:** [`GRADING/DV.md`](./GRADING/DV.md)
 - **DS - Отчёт «DevSecOps-сканы и харднинг»:** `GRADING/DS.md`
 
 **Минимальная структура репозитория:**
